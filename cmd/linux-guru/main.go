@@ -24,6 +24,14 @@ Para outras perguntas, responda: Não sei sobre este tema, tente outra pergunta.
 Pergunta: %s
 Resposta: `
 
+var disclaimer = `
++--[Aviso]---------------------------------------+
+| Este é um conteúdo gerado por AI.              |
+| Revise quaisquer comandos antes de executá-los.|
++------------------------------------------------+
+
+`
+
 func main() {
 	// Parse command line options
 	flag.Parse()
@@ -49,6 +57,8 @@ func main() {
 		log.Printf("Detalhes: %#v", generated.SafetyAttributes)
 		log.Fatal("Esta resposta foi bloqueada.")
 	}
+
+	fmt.Println(disclaimer)
 
 	fmt.Println(generated.Content)
 	if len(generated.CitationMetadata.Citations) > 0 {
