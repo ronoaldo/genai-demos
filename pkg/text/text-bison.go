@@ -32,10 +32,12 @@ var DefaultParameters = Parameters{
 	CandidateCount: 1,
 }
 
-// MoreDeterministic are suggested parameters to experiment with that,
-// according to the documentation, will yield results more deterministic.
-// Note that these are biased by the author of this module's understanding,
-// and not Google/Vertex AI's recommendations.
+// MoreDeterministic are suggested parameters to experiment with.
+// According to the documentation, they may generate results
+// that are more deterministic.
+//
+// Warning: these are just suggestions and not a specific recommendation
+// from Google. Addapt these to your use case.
 var MoreDeterministic = Parameters{
 	Temperature:    0.0,
 	TopK:           1,
@@ -44,10 +46,12 @@ var MoreDeterministic = Parameters{
 	CandidateCount: 1,
 }
 
-// MoreCreative are suggested parameters to experiment with that,
-// according to the documentation, will yield results more creative.
-// Note that these are biased by the author of this module's understanding,
-// and not Google/Vertex AI's recommendations.
+// MoreCreative are suggested parameters to experiment with.
+// According to the documentation, they may generate results
+// that are more creative.
+//
+// Warning: these are just suggestions and not a specific recommendation
+// from Google. Addapt these to your use case.
 var MoreCreative = Parameters{
 	Temperature:    1.0,
 	TopK:           40,
@@ -56,7 +60,8 @@ var MoreCreative = Parameters{
 	CandidateCount: 1,
 }
 
-// ModelVersion is the currently used model version for text generation.
+// ModelVersion is the currently used model version for text generation
+// used by the prediction API calls.
 const ModelVersion = "text-bison@001"
 
 // Prediction represents the returned prediction content and metadata
