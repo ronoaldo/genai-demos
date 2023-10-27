@@ -12,6 +12,10 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
+// ModelVersion is the currently used model version for text generation
+// used by the prediction API calls.
+const ModelVersion = "text-bison@001"
+
 // Parameters are model parameters that can be used by the Generative AI
 // models on Vertex AI.
 type Parameters struct {
@@ -60,24 +64,37 @@ var MoreCreative = Parameters{
 	CandidateCount: 1,
 }
 
-// ModelVersion is the currently used model version for text generation
-// used by the prediction API calls.
-const ModelVersion = "text-bison@001"
+// Citation describes a citation reference when the model detects that
+// one is needed.
+type Citation struct {
+	StartIndex      int    `json:"startIndex,omitempty"`
+	EndIndex        int    `json:"endIndex,omitempty"`
+	URL             string `json:"url,omitempty"`
+	Title           string `json:"title,omitempty"`
+	License         string `json:"license,omitempty"`
+	PublicationDate string `json:"publicationDate,omitempty"`
+}
+
+// CitationMetadata holds the list of citations if any.
+type CitationMetadata struct {
+	Citations []Citation `json:"citations,omitempty"`
+}
+
+// SafetyAttributes holds the detailed information of safety attributes
+// returned by the model, as part of the Responsible AI actions taken
+// by Google to signal if the output is harmful.
+type SafetyAttributes struct {
+	Blocked    bool      `json:"blocked,omitempty"`
+	Categories []string  `json:"categories,omitempty"`
+	Scores     []float64 `json:"scores,omitempty"`
+}
 
 // Prediction represents the returned prediction content and metadata
 // from the Generative AI model on Vertex AI.
 type Prediction struct {
-	Content string `json:"content"`
-
-	CitationMetadata struct {
-		Citations []string `json:"citations,omitempty"`
-	} `json:"citationMetadata,omitempty"`
-
-	SafetyAttributes struct {
-		Blocked    bool      `json:"blocked,omitempty"`
-		Categories []string  `json:"categories,omitempty"`
-		Scores     []float64 `json:"scores,omitempty"`
-	} `json:"safetyAttributes,omitempty"`
+	Content          string           `json:"content"`
+	CitationMetadata CitationMetadata `json:"citationMetadata,omitempty"`
+	SafetyAttributes SafetyAttributes `json:"safetyAttributes,omitempty"`
 }
 
 // TokenCountMetadata is a helper struct to encode the resulting
@@ -183,9 +200,13 @@ func (t *TextClient) GenerateText(ctx context.Context, promptContext, prompt str
 		return nil, err
 	}
 	t.debug("metadata => ", string(b))
-	err = json.Unmarshal(b, r)
+	if err = json.Unmarshal(b, r); err != nil {
+		return nil, err
+	}
+
 	for i := range resp.Predictions {
-		b, err := resp.Predictions[i].MarshalJSON()
+		m := resp.Predictions[i].GetStructValue().AsMap()
+		b, err := json.Marshal(m)
 		if err != nil {
 			return nil, err
 		}
@@ -196,7 +217,7 @@ func (t *TextClient) GenerateText(ctx context.Context, promptContext, prompt str
 		}
 		r.Predictions = append(r.Predictions, p)
 	}
-	return r, err
+	return r, nil
 }
 
 // EnableDebug activates extra messages printed to stderr for debugging.
