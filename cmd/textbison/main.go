@@ -21,10 +21,10 @@ func init() {
 func main() {
 	// Parse command line options
 	flag.Parse()
-	if len(os.Args) < 2 {
+	if len(flag.Args()) < 1 {
 		log.Fatalf("Please provide a prompt in the command line.")
 	}
-	prompt := strings.Join(os.Args[1:], " ")
+	prompt := strings.Join(flag.Args(), " ")
 	params := text.DefaultParameters
 
 	// Print the request attributes used
