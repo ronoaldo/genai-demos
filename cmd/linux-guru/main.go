@@ -25,10 +25,10 @@ Pergunta: %s
 Resposta: `
 
 var disclaimer = `
-+--[Aviso]---------------------------------------+
-| Este é um conteúdo gerado por AI.              |
-| Revise quaisquer comandos antes de executá-los.|
-+------------------------------------------------+
++--[Aviso]----------------------------------------+
+| Este é um conteúdo gerado por IA.               |
+| Revise quaisquer comandos antes de executá-los. |
++-------------------------------------------------+
 
 `
 

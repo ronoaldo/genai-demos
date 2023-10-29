@@ -12,18 +12,20 @@ import (
 )
 
 var projectID string
-
-func init() {
-	flag.StringVar(&projectID, "project",
-		os.Getenv("GOOGLE_CLOUD_PROJECT"), "The Google `PROJECT_ID` to be used.")
-}
-
-var promptContext = `Você resume e interpreta a saída de logs estruturados do Google Cloud Logging.
+var verbose bool
+var promptContext = `
+Você resume e interpreta a saída de logs estruturados do Google Cloud Logging.
 A resposta deve ser curta e objetiva.
 
 Explique em Português o que está acontecendo com base no log em JSON abaixo:
 
 `
+
+func init() {
+	flag.StringVar(&projectID, "project",
+		os.Getenv("GOOGLE_CLOUD_PROJECT"), "The Google `PROJECT_ID` to be used.")
+	flag.BoolVar(&verbose, "v", false, "If the output should be more verbose.")
+}
 
 func main() {
 	// Parse command line options
@@ -38,11 +40,13 @@ func main() {
 	jsonlog := string(b)
 	params := text.DefaultParameters
 	ctx := context.Background()
-	log.Printf("%v", jsonlog)
-	log.Printf("Analisando log ...")
+	model := text.NewClient(projectID)
 
 	// Call the model to generate text
-	model := text.NewClient(projectID)
+	if verbose {
+		log.Printf("Analisando log: %v", jsonlog)
+		model.Debug(true)
+	}
 	resp, err := model.GenerateText(ctx, promptContext, jsonlog, params)
 	if err != nil {
 		log.Fatalf("Erro: model.GenerateText: %v", err.Error())

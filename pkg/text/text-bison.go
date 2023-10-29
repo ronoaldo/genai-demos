@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 
 	aiplatform "cloud.google.com/go/aiplatform/apiv1"
 	"cloud.google.com/go/aiplatform/apiv1/aiplatformpb"
@@ -152,11 +153,16 @@ func NewClient(projectID string) *TextClient {
 // The returned Response will contain the list of predictions as well as any metadata
 // returned by the call.
 func (t *TextClient) GenerateText(ctx context.Context, promptContext, prompt string, params Parameters) (response *Response, err error) {
+	// Compile the promptContext with the prompt, allowing for empty context and
+	// no formatting strings to be properly used.
+	compiledPrompt := fmt.Sprintf(promptContext, prompt)
+	if !strings.Contains(promptContext, "%s") {
+		compiledPrompt = promptContext + " " + prompt
+	}
 	// Preparing the request data, using the structpb.Value as a
-	// conteiner for the input. This will use the gRPC APIs if possible,
-	// otherwise sort of fallback into the JSON value.
+	// conteiner for the input. This will use the gRPC APIs.
 	instance, err := structpb.NewValue(map[string]interface{}{
-		"prompt": fmt.Sprintf(promptContext, prompt),
+		"prompt": compiledPrompt,
 	})
 	if err != nil {
 		return nil, err
@@ -178,7 +184,7 @@ func (t *TextClient) GenerateText(ctx context.Context, promptContext, prompt str
 		Instances:  []*structpb.Value{instance},
 		Parameters: parameters,
 	}
-	t.debug("request => ", req)
+	t.debug("Sending request => %v", req)
 
 	// Connecting to the desired server
 	client, err := aiplatform.NewPredictionClient(ctx, option.WithEndpoint("us-central1-aiplatform.googleapis.com:443"))
@@ -191,7 +197,7 @@ func (t *TextClient) GenerateText(ctx context.Context, promptContext, prompt str
 	if err != nil {
 		return nil, err
 	}
-	t.debug("response => ", resp)
+	t.debug("Got Response => %v", resp)
 
 	// Decoding the response with the help of encoding/json
 	r := &Response{}
@@ -199,7 +205,7 @@ func (t *TextClient) GenerateText(ctx context.Context, promptContext, prompt str
 	if err != nil {
 		return nil, err
 	}
-	t.debug("metadata => ", string(b))
+	t.debug("Parsing resp.Metadata => %v", string(b))
 	if err = json.Unmarshal(b, r); err != nil {
 		return nil, err
 	}
@@ -210,7 +216,7 @@ func (t *TextClient) GenerateText(ctx context.Context, promptContext, prompt str
 		if err != nil {
 			return nil, err
 		}
-		t.debug("prediction => ", string(b))
+		t.debug("Parsing resp.Prediction[i] => %v", string(b))
 		p := Prediction{}
 		if err = json.Unmarshal(b, &p); err != nil {
 			return nil, err
@@ -221,8 +227,8 @@ func (t *TextClient) GenerateText(ctx context.Context, promptContext, prompt str
 }
 
 // EnableDebug activates extra messages printed to stderr for debugging.
-func (t *TextClient) EnableDebug() {
-	t.debugFlag = true
+func (t *TextClient) Debug(enable bool) {
+	t.debugFlag = enable
 }
 
 // debug is a helper function to print debug messages if debug flag is on.
@@ -230,5 +236,5 @@ func (t *TextClient) debug(msg string, v any) {
 	if !t.debugFlag {
 		return
 	}
-	log.Println("DEBUG: "+msg, v)
+	log.Printf("DEBUG: "+msg, v)
 }
