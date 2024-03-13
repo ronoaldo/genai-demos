@@ -5,7 +5,7 @@ go 1.21.3
 require (
 	cloud.google.com/go/aiplatform v1.51.2
 	google.golang.org/api v0.148.0
-	google.golang.org/protobuf v1.31.0
+	google.golang.org/protobuf v1.33.0
 )
 
 require (
